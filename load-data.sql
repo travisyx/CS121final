@@ -1,0 +1,30 @@
+-- Commands to load CSV files into the relevant tables
+-- Change '\n' to '\r\n' on Windows machines if needed.
+LOAD DATA LOCAL INFILE 'goalkeepers.csv' INTO TABLE 
+goalkeepers FIELDS TERMINATED BY ',' ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE 'defenders.csv' INTO TABLE 
+defenders FIELDS TERMINATED BY ',' ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE 'midfielders.csv' INTO TABLE 
+midfielders FIELDS TERMINATED BY ',' ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE 'forwards.csv' INTO TABLE 
+forwards FIELDS TERMINATED BY ',' ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE 'outfield_attributes.csv' INTO TABLE 
+outfield_attributes FIELDS TERMINATED BY ',' ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE 'nontechnical_attributes.csv' INTO TABLE 
+nontechnical_attributes FIELDS TERMINATED BY ',' ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
+LOAD DATA LOCAL INFILE 'player.csv' INTO TABLE 
+player FIELDS TERMINATED BY ',' ENCLOSED BY '"' 
+LINES TERMINATED BY '\n' IGNORE 1 ROWS;
+
