@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS player;
 CREATE TABLE player (
     id INT UNIQUE, -- A unique identifier for the player in the game
     name VARCHAR(100), -- The full name of the player (i.e. Eden Hazard)
-    overall INT NOT NULL, -- The player's rating on FIFA 20
+    rating INT NOT NULL, -- The player's rating on FIFA 20
     wage INT NOT NULL, -- The salary of the player in euros
     PRIMARY KEY (id, name)
 );
