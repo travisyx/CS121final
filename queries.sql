@@ -22,7 +22,8 @@ WHERE pace > 2 * (SELECT slow FROM t) ORDER BY passing DESC LIMIT 5;
 -- goalkeeper on a team are both ineligible for a match (red card, injury, etc)
 -- Insert into goalkeeper the fastest forward. Make sure that they have stats 
 -- that are all 1s. This matches RA #3.
-WITH t AS (SELECT id FROM forwards NATURAL JOIN player WHERE pace = (SELECT MAX(pace) FROM forwards))
-INSERT INTO goalkeepers VALUES SELECT id,1,1,1,1,1,1 FROM t;
-
-
+INSERT INTO 
+    goalkeepers(id, diving, handling, kicking, reflexes, speed, positioning) 
+VALUES 
+    ((SELECT id FROM forwards NATURAL JOIN player 
+        WHERE pace = (SELECT MAX(pace) FROM forwards)), 1, 1, 1, 1, 1, 1);
