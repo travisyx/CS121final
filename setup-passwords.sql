@@ -1,5 +1,7 @@
 -- File for Password Management section of Final Project
 
+DROP FUNCTION IF EXISTS make_salt;
+
 -- (Provided) This function generates a specified number of characters for 
 -- using as a salt in passwords.
 DELIMITER !
@@ -21,6 +23,8 @@ BEGIN
     RETURN salt;
 END !
 DELIMITER ;
+
+DROP TABLE IF EXISTS user_info;
 
 -- Provided (you may modify if you choose)
 -- This table holds information for authenticating users based on
@@ -44,43 +48,47 @@ CREATE TABLE user_info (
     password_hash BINARY(64) NOT NULL
 );
 
+DROP PROCEDURE IF EXISTS sp_add_user;
+
 -- [Problem 1a]
 -- Adds a new user to the user_info table, using the specified password (max
 -- of 20 characters). Salts the password with a newly-generated salt value,
 -- and then the salt and hash values are both stored in the table.
 DELIMITER !
 CREATE PROCEDURE sp_add_user(new_username VARCHAR(20), password VARCHAR(20))
-RETURNS TINYINT DETERMINISTIC
 BEGIN
     DECLARE salt CHAR(8);
     SET salt = make_salt(8);
 
     INSERT INTO user_info
-    VALUES (new_username, salt, SHA2(CONCAT(salt, password), 256))
+    VALUES (new_username, salt, SHA2(CONCAT(salt, password), 256));
 END !
 DELIMITER ;
 
+DROP FUNCTION IF EXISTS authenticate;
 -- [Problem 1b]
 -- Authenticates the specified username and password against the data
 -- in the user_info table.  Returns 1 if the user appears in the table, and the
 -- specified password hashes to the value for the user. Otherwise returns 0.
 DELIMITER !
 CREATE FUNCTION authenticate(username VARCHAR(20), password VARCHAR(20))
-RETURNS TINYINT DETERMINISTIC
+RETURNS TINYINT
 BEGIN
     DECLARE salt CHAR(8);
     DECLARE hashed BINARY(64);
 
     IF username IN (SELECT username FROM user_info)
     THEN
-        SET salt = (SELECT salt FROM user_info WHERE username = username);   
+        SET salt = (SELECT salt FROM user_info 
+            WHERE user_info.username = username);   
         SET hashed = SHA2(CONCAT(salt, password), 256);
         IF hashed = (SELECT password_hash FROM user_info 
-            WHERE username = username)
-        THEN
-            RETURN 1;
-
-    RETURN 0;
+            WHERE user_info.username = username)
+        THEN RETURN 1;
+        ELSE RETURN 0;
+        END IF;
+    ELSE RETURN 0;
+    END IF;
 END !
 DELIMITER ;
 
@@ -88,8 +96,8 @@ DELIMITER ;
 -- Add at least two users into your user_info table so that when we run this 
 -- file, we will have examples users in the database.
 
-sp_add_user("txiang", "thisisasecurepass");
-sp_add_user("riiyer", "thisissosecureandsafe");
+CALL sp_add_user("txiang", "thisisasecurepass");
+CALL sp_add_user("riiyer", "thisissosafe");
 
 
 -- [Problem 1d]
