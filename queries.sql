@@ -15,7 +15,7 @@ SELECT name, nationality, club, avg_rating FROM t NATURAL RIGHT JOIN
 -- (pace) as the slowest midfielder
 WITH t AS 
     (SELECT MIN(pace) AS slow FROM midfielders)
-SELECT name, passing, pace, FROM midfielders NATURAL JOIN player
+SELECT name, passing, pace FROM midfielders NATURAL JOIN player
 WHERE pace > 2 * (SELECT slow FROM t) ORDER BY passing DESC LIMIT 5;
 
 -- Query 3: It is not an impossibility that a goalkeeper and the reserve 
