@@ -1,5 +1,6 @@
 -- This function takes as an input the id for a player and guesses the
 -- worth in N years
+-- DROP FUNCTION IF EXISTS guess_future_worth;
 DELIMITER !
 CREATE FUNCTION guess_future_worth (id INT, N int) 
     RETURNS DOUBLE DETERMINISTIC
@@ -26,6 +27,7 @@ BEGIN
             -- Wage tends to increase proportionally until 30, where it doubles
             RETURN ((30 - AGE - N) / (30 - AGE)) * WAGE + WAGE;
     END IF;
+    END IF;
 END !
 DELIMITER ;
 
@@ -34,32 +36,33 @@ DELIMITER ;
 -- that is more precise than the FIFA rating. This allows for easier comparison
 -- between two players of the same position. If the player is not found, then
 -- return -1
+-- DROP FUNCTION IF EXISTS compute_rating;
 DELIMITER !
 CREATE FUNCTION compute_rating (play_id INT) 
     RETURNS DOUBLE DETERMINISTIC
 BEGIN
     DECLARE rating DOUBLE DEFAULT 0;
-    IF (play_id IN SELECT id FROM goalkeepers) -- Goalkeepers
+    IF play_id IN (SELECT id FROM goalkeepers) -- Goalkeepers
         THEN
         -- Most important attributes are diving, reflexes, and positioning in
         -- that order so these are emphasized
         SET rating = (SELECT (1.5 * diving + 1.4 * reflexes + 1.4 * positioning 
             + handling + kicking + speed) FROM goalkeepers WHERE id = play_id);
-    ELSEIF (play_id IN SELECT id FROM defenders) -- Defenders
+    ELSEIF play_id IN (SELECT id FROM defenders) -- Defenders
         THEN
         -- Defending is more important than physical, so emphasize it more
         SET rating = (SELECT (1.5 * defending + 1.2 * physical) FROM defenders
             WHERE id = play_id);
-    ELSEIF (play_id IN SELECT id FROM midfielders) -- Midfielders
+    ELSEIF play_id IN (SELECT id FROM midfielders) -- Midfielders
         THEN
         -- Most important are passing, dribbling, and pace, in that order
         SET rating = ((SELECT (1.5 * passing + 1.4 * dribbling + 
-            1.1 * pace + physical) FROM midfielders WHERE id = play_id);
-    ELSEIF (play_id IN SELECT id FROM forwards) -- Forwards       
+            1.1 * pace + physical) FROM midfielders WHERE id = play_id));
+    ELSEIF play_id IN (SELECT id FROM forwards) -- Forwards       
         THEN
         -- Most important are pace, dribbling, and shooting, in that order
         SET rating = ((SELECT (1.5 * dribbling + 1.4 * shooting + 
-            1.4 * pace + passing) FROM forwards WHERE id = play_id);
+            1.4 * pace + passing) FROM forwards WHERE id = play_id));
     ELSE
         -- Positions are different
         RETURN -1;
@@ -73,6 +76,7 @@ DELIMITER ;
 -- has a predicted higher ranking than the other, 0 for equality and -1 
 -- otherwise. Returns 2 if positions are different
 -- Calls the above function compute_rating
+-- DROP FUNCTION IF EXISTS compute;
 DELIMITER !
 CREATE FUNCTION compute (fst_id INT, snd_id INT) 
     RETURNS DOUBLE DETERMINISTIC
@@ -80,14 +84,14 @@ BEGIN
     DECLARE fst_rating INT DEFAULT 0;
     DECLARE snd_rating INT DEFAULT 0;
     -- Check if the two players play the same position
-    IF ((fst_id IN SELECT id FROM goalkeepers) AND 
-            (snd_id IN SELECT id FROM goalkeepers)) OR
-        ((fst_id IN SELECT id FROM defenders) AND 
-            (snd_id IN SELECT id FROM defenders)) OR 
-        ((fst_id IN SELECT id FROM midfielders) AND 
-            (snd_id IN SELECT id FROM midfielders)) OR
-        ((fst_id IN SELECT id FROM forwards) AND 
-            (snd_id IN SELECT id FROM forwards))
+    IF (fst_id IN (SELECT id FROM goalkeepers) AND 
+            snd_id IN (SELECT id FROM goalkeepers)) OR
+        (fst_id IN (SELECT id FROM defenders) AND 
+            snd_id IN (SELECT id FROM defenders)) OR 
+        (fst_id IN (SELECT id FROM midfielders) AND 
+            snd_id IN (SELECT id FROM midfielders)) OR
+        (fst_id IN (SELECT id FROM forwards) AND 
+            snd_id IN (SELECT id FROM forwards))
     THEN
         SET fst_rating = compute_rating (fst_id);
         SET snd_rating = compute_rating (snd_id);
@@ -104,6 +108,7 @@ DELIMITER ;
 
 -- Given id, name, and rating, insert a predicted wage (based on 
 -- other entries) with a player with a new id of MAX(id)+1
+-- DROP PROCEDURE IF EXISTS insert_predicted_wage;
 DELIMITER !
 CREATE PROCEDURE insert_predicted_wage (id INT, name VARCHAR(100), overall INT)
 BEGIN
@@ -117,12 +122,12 @@ BEGIN
     THEN
         IF overall < (SELECT MIN(rating) FROM player)
         THEN SET predicted = 0;
-        ELSE IF overall > (SELECT MAX(rating) FROM player)
-        THEN 
+        ELSE
             SET predicted = 
-                (SELECT CAST(1.1 * wage AS INT) FROM player, 
+                (SELECT CAST(1.1*wage AS UNSIGNED) FROM player, 
                     (SELECT MAX(rating) AS rating FROM player) AS t
                 WHERE player.rating = t.rating);
+		END IF;
     ELSE -- Other players have this rating
         SET predicted = 
             (SELECT AVG(wage) FROM player WHERE rating = rating);
@@ -132,7 +137,7 @@ BEGIN
 END !
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS redo_wage;
+-- DROP TRIGGER IF EXISTS redo_wage;
 
 -- If a player is inserted into the player table, insert a "copy" with 
 -- the predicted wage. This makes it more convenient for managers and clients
