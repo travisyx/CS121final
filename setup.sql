@@ -40,6 +40,13 @@ CREATE TABLE goalkeepers (
     reflexes INT NOT NULL, -- How fast their reflexes are
     speed INT NOT NULL, -- How rapid they are
     positioning INT NOT NULL, -- How well they position themselves on the field
+    -- Check that all the stats are between 0 and 100
+    CHECK (diving BETWEEN 0 AND 100),
+    CHECK (handling BETWEEN 0 AND 100),
+    CHECK (kicking BETWEEN 0 AND 100),
+    CHECK (reflexes BETWEEN 0 AND 100),
+    CHECK (speed BETWEEN 0 AND 100),
+    CHECK (positioning BETWEEN 0 AND 100),
     PRIMARY KEY (id),
     FOREIGN KEY (id) REFERENCES player(id)
         ON UPDATE CASCADE ON DELETE CASCADE
@@ -53,6 +60,8 @@ CREATE TABLE defenders (
     position VARCHAR(3) NOT NULL,
     defending INT NOT NULL,
     physical INT NOT NULL,
+    CHECK (defending BETWEEN 0 AND 100),
+    CHECK (physical BETWEEN 0 AND 100),
     CHECK (position IN ('LB', 'LWB', 'LCB', 'CB', 'RCB', 'RB', 'RWB')),
     FOREIGN KEY (id) REFERENCES player(id)
         ON UPDATE CASCADE ON DELETE CASCADE
@@ -68,6 +77,10 @@ CREATE TABLE midfielders (
     passing INT NOT NULL,
     dribbling INT NOT NULL,
     physical INT NOT NULL,
+    CHECK (pace BETWEEN 0 AND 100),
+    CHECK (passing BETWEEN 0 AND 100),
+    CHECK (dribbling BETWEEN 0 AND 100),
+    CHECK (physical BETWEEN 0 AND 100),
     CHECK (position IN ('CDM', 'LDM', 'RDM', 'CAM', 'RCM', 'LCM', 'CM', 'LAM',
             'RAM', 'LM', 'RM')),
     FOREIGN KEY (id) REFERENCES player(id)
@@ -84,6 +97,10 @@ CREATE TABLE forwards (
     shooting INT NOT NULL,
     passing INT NOT NULL,
     dribbling INT NOT NULL,
+    CHECK (pace BETWEEN 0 AND 100),
+    CHECK (shooting BETWEEN 0 AND 100),
+    CHECK (passing BETWEEN 0 AND 100),
+    CHECK (dribbling BETWEEN 0 AND 100),
     CHECK (position IN ('CF', 'LF', 'LS', 'RS', 'LW', 'RW', 'RF', 'ST')),
     FOREIGN KEY (id) REFERENCES player(id)
         ON UPDATE CASCADE ON DELETE CASCADE
