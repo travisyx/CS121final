@@ -1,7 +1,7 @@
 -- File for Password Management section of Final Project
 
--- (Provided) This function generates a specified number of characters for using as a
--- salt in passwords.
+-- (Provided) This function generates a specified number of characters for 
+-- using as a salt in passwords.
 DELIMITER !
 CREATE FUNCTION make_salt(num_chars INT) 
 RETURNS VARCHAR(20) NOT DETERMINISTIC
@@ -51,7 +51,11 @@ CREATE TABLE user_info (
 DELIMITER !
 CREATE PROCEDURE sp_add_user(new_username VARCHAR(20), password VARCHAR(20))
 BEGIN
-  -- TODO
+    DECLARE salt CHAR(8);
+    SET salt = make_salt(8);
+
+    INSERT INTO user_info
+    VALUES (new_username, salt, SHA2(CONCAT(salt, password), 256))
 END !
 DELIMITER ;
 
@@ -63,15 +67,31 @@ DELIMITER !
 CREATE FUNCTION authenticate(username VARCHAR(20), password VARCHAR(20))
 RETURNS TINYINT DETERMINISTIC
 BEGIN
-  -- TODO
+    DECLARE salt CHAR(8);
+    DECLARE hashed BINARY(64);
+
+    IF username IN (SELECT username FROM user_info)
+    THEN
+        SET salt = (SELECT salt FROM user_info WHERE username = username);   
+        SET hashed = SHA2(CONCAT(salt, password), 256);
+        IF hashed = (SELECT password_hash FROM user_info 
+            WHERE username = username)
+        THEN
+            RETURN 1;
+
+    RETURN 0;
 END !
 DELIMITER ;
 
 -- [Problem 1c]
--- Add at least two users into your user_info table so that when we run this file,
--- we will have examples users in the database.
+-- Add at least two users into your user_info table so that when we run this 
+-- file, we will have examples users in the database.
+
+CALL sp_add_user("txiang", "thisisasecurepass");
+CALL sp_add_user("riiyer", "thisissosecureandsafe");
 
 
 -- [Problem 1d]
--- Optional: Create a procedure sp_change_password to generate a new salt and change the given
--- user's password to the given password (after salting and hashing)
+-- Optional: Create a procedure sp_change_password to generate a new salt and 
+-- change the given user's password to the given password (after salting and 
+-- hashing)
