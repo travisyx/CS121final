@@ -1,12 +1,12 @@
 -- File for Password Management section of Final Project
-
+SET GLOBAL log_bin_trust_function_creators = 1;
 DROP FUNCTION IF EXISTS make_salt;
 
 -- (Provided) This function generates a specified number of characters for 
 -- using as a salt in passwords.
 DELIMITER !
 CREATE FUNCTION make_salt(num_chars INT) 
-RETURNS VARCHAR(20) NOT DETERMINISTIC
+RETURNS VARCHAR(20) NO SQL
 BEGIN
     DECLARE salt VARCHAR(20) DEFAULT '';
 
@@ -104,3 +104,4 @@ CALL sp_add_user("riiyer", "thisissosafe");
 -- Optional: Create a procedure sp_change_password to generate a new salt and 
 -- change the given user's password to the given password (after salting and 
 -- hashing)
+
