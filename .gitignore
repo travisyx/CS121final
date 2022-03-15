@@ -1,3 +1,4 @@
 .ipynb_checkpoints/*
 teams_and_leagues.csv
 players_20.csv
+*.swp

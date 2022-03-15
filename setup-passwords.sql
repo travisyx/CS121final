@@ -50,6 +50,7 @@ CREATE TABLE user_info (
 -- and then the salt and hash values are both stored in the table.
 DELIMITER !
 CREATE PROCEDURE sp_add_user(new_username VARCHAR(20), password VARCHAR(20))
+RETURNS TINYINT DETERMINISTIC
 BEGIN
     DECLARE salt CHAR(8);
     SET salt = make_salt(8);
@@ -87,8 +88,8 @@ DELIMITER ;
 -- Add at least two users into your user_info table so that when we run this 
 -- file, we will have examples users in the database.
 
-CALL sp_add_user("txiang", "thisisasecurepass");
-CALL sp_add_user("riiyer", "thisissosecureandsafe");
+sp_add_user("txiang", "thisisasecurepass");
+sp_add_user("riiyer", "thisissosecureandsafe");
 
 
 -- [Problem 1d]
