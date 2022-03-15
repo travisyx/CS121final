@@ -88,3 +88,8 @@ CREATE TABLE forwards (
     FOREIGN KEY (id) REFERENCES player(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+-- Create an indices for attributes that will be frequently used when 
+-- evaluating the TOTY
+CREATE INDEX value ON player (rating, wage);
+CREATE INDEX player_desc ON nontechnical_attributes (age, nationality);
