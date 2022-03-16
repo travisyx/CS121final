@@ -166,7 +166,35 @@ SELECT name FROM
 # ----------------------------------------------------------------------
 # Functions for Logging Users In
 # ----------------------------------------------------------------------
-
+def login():
+    """
+    A function to log users in given usernames and passwords login
+    """
+    username = input("Enter username: ")
+    password = input("Enter password: ") # In the future, hide this text
+    cursor = conn.cursor()
+    sql = """ SELECT authenticate(\'%s\', \'%s\'); """ % (username, password, )
+    try:
+        # Select the goalkeeper
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        if len(rows) == 0:
+            print("Your account does not exist!")
+        else:
+            row = rows[0]
+            if row[0] == 1:
+                print("Success!\n")
+                show_options()
+            else:
+                print("Incorrect password or your account does not exist!\n")
+                show_options()
+    except mysql.connector.Error as err:
+        if DEBUG:
+            sys.stderr(err)
+            sys.exit(1)
+        else:
+            sys.stderr("""An error occurred, please email txiang@caltech.edu or 
+                            riiyer@caltech.edu!""")
 
 # ----------------------------------------------------------------------
 # Command-Line Functionality
