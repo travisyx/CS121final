@@ -85,6 +85,7 @@ WHERE id = \'%s\';
             sys.stderr("""An error occurred, please email txiang@caltech.edu or 
                             riiyer@caltech.edu!""")
 
+
 def get_TOTY():
     """
     Select a team of the year given the nationality
@@ -196,6 +197,28 @@ def login():
             sys.stderr("""An error occurred, please email txiang@caltech.edu or 
                             riiyer@caltech.edu!""")
 
+
+def create_user():
+    """
+    A function to create a new user for the database. Assumes that the account
+    does not exist. Crashes if it does.
+    """
+    username = input("Enter username: ")
+    password = input("Enter password: ") # In the future, hide this text
+    cursor = conn.cursor()
+    sql = """ CALL sp_add_user(\'%s\', \'%s\'); """ % (username, password, )
+    try:
+        # Select the goalkeeper
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        print("Success!")
+    except mysql.connector.Error as err:
+        if DEBUG:
+            sys.stderr(err)
+            sys.exit(1)
+        else:
+            sys.stderr("""An error occurred, please email txiang@caltech.edu or 
+                            riiyer@caltech.edu!""")
 # ----------------------------------------------------------------------
 # Command-Line Functionality
 # ----------------------------------------------------------------------
@@ -209,6 +232,7 @@ def show_options():
     print('  (i) - Get information on a player by id')
     print('  (n) - Get the TOTY given a nationality')
     print('  (l) - Login')
+    print('  (c) - Create a new account')
     print('  (q) - quit')
     print()
     ans = input('Enter an option: ').lower()
@@ -220,6 +244,8 @@ def show_options():
         get_TOTY()
     elif ans == 'l':
         login()
+    elif ans == 'c':
+        create_user()
     elif ans == '':
         pass    
 

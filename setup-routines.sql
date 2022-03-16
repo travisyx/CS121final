@@ -76,9 +76,8 @@ DELIMITER ;
 -- has a predicted higher ranking than the other, 0 for equality and -1 
 -- otherwise. Returns 2 if positions are different
 -- Calls the above function compute_rating
--- DROP FUNCTION IF EXISTS compute;
 DELIMITER !
-CREATE FUNCTION compute (fst_id INT, snd_id INT) 
+CREATE FUNCTION compare (fst_id INT, snd_id INT) 
     RETURNS DOUBLE DETERMINISTIC
 BEGIN
     DECLARE fst_rating INT DEFAULT 0;
