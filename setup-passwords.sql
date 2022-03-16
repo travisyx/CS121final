@@ -58,10 +58,14 @@ DELIMITER !
 CREATE PROCEDURE sp_add_user(new_username VARCHAR(20), password VARCHAR(20))
 BEGIN
     DECLARE salt CHAR(8);
+    DECLARE salted VARCHAR(28);
+    DECLARE hash CHAR(64);
     SET salt = make_salt(8);
+    SET salted = CONCAT(salt, password);
+    SET hash = SHA2(salted, 256);
 
     INSERT INTO user_info
-    VALUES (new_username, salt, SHA2(CONCAT(salt, password), 256));
+    VALUES (new_username, salt, CONVERT(hash, BINARY));
 END !
 DELIMITER ;
 
@@ -75,16 +79,18 @@ DELIMITER !
 CREATE FUNCTION authenticate(username VARCHAR(20), password VARCHAR(20))
 RETURNS TINYINT
 BEGIN
-    DECLARE salt CHAR(8);
-    DECLARE hashed BINARY(64);
+    DECLARE slt CHAR(8);
+    DECLARE salted VARCHAR(28);
+    DECLARE hashed CHAR(64);
 
     IF username IN (SELECT username FROM user_info)
     THEN
-        SET salt = (SELECT salt FROM user_info 
+        SET slt = (SELECT salt FROM user_info 
             WHERE user_info.username = username);   
-        SET hashed = SHA2(CONCAT(salt, password), 256);
-        IF hashed = (SELECT password_hash FROM user_info 
-            WHERE user_info.username = username)
+        SET salted = CONCAT(slt, password);
+        SET hashed = SHA2(salted, 256);
+        IF hashed = (SELECT CONVERT((SELECT password_hash FROM user_info 
+            WHERE user_info.username = username), CHAR))
         THEN RETURN 1;
         ELSE RETURN 0;
         END IF;
