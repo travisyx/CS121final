@@ -1,4 +1,5 @@
 .ipynb_checkpoints/*
+lecture-demo.py
 teams_and_leagues.csv
 players_20.csv
 *.swp
