@@ -246,37 +246,40 @@ SELECT get_predicted_wage(%s, \'%s\', %s);
     pred_wage = cursor.fetchall()[0][0]
 
     insert_player_table = """
-INSERT INTO player VALUES (%s, \'%s\', %s, %s);
-""" % (next_id, player_name, pred_wage, overall,)
+INSERT INTO player(id, name, rating, wage) VALUES (%s, \'%s\', %s, %s);
+""" % (next_id, player_name, overall, pred_wage,)
     cursor.execute(insert_player_table)
     conn.commit()
 
     insert_nontech_table = """
-INSERT INTO nontechnical_attributes(age, dob, height, weight, nation, club) 
-VALUES (%s,\'%s\', %s, %s, \'%s\', \'%s\';
-""" % (age, dob, height, weight, nation, club,)
+INSERT INTO nontechnical_attributes 
+    (id, name, age, dob, height, weight, nationality, club) 
+VALUES (%s, \'%s\', %s, \'%s\', %s, %s, \'%s\', \'%s\');
+""" % (next_id, player_name, age, dob, height, weight, nation, club,)
     cursor.execute(insert_nontech_table)
     conn.commit()
 
     if position_table == 'goalkeepers':
         insert_pos_table = """
-INSERT INTO \'%s\' (diving, handling, kicking, reflexes, speed, positioning) 
-VALUES (%s, %s, %s, %s, %s, %s)
-""" % (position_table, overall, overall, overall, overall, overall, overall,)
+INSERT INTO %s 
+    (id, position, diving, handling, kicking, reflexes, speed, positioning) 
+VALUES (%s, \'%s\', %s, %s, %s, %s, %s, %s)
+""" % (position_table, next_id, position, overall, overall, overall, \
+                overall, overall, overall,)
     elif position_table == 'defenders':
         insert_pos_table = """
-INSERT INTO \'%s\' (defending, physical) VALUES (%s, %s)
-""" % (position_table, overall, overall,)
+INSERT INTO %s (id, position, defending, physical) VALUES (%s, \'%s\', %s, %s)
+""" % (position_table, next_id, position, overall, overall,)
     elif position_table == 'midfielders':
         insert_pos_table = """
-INSERT INTO \'%s\' (pace, passing, physical, dribbling) 
-VALUES (%s, %s, %s, %s)
-""" % (position_table, overall, overall, overall, overall,)
+INSERT INTO %s (id, position, pace, passing, physical, dribbling) 
+VALUES (%s, \'%s\', %s, %s, %s, %s)
+""" % (position_table, next_id, position, overall, overall, overall, overall,)
     else:
         insert_pos_table = """
-INSERT INTO \'%s\' (pace, shooting, dribbling, passing) 
-VALUES (%s, %s, %s, %s)
-""" % (position_table, overall, overall, overall, overall,)
+INSERT INTO %s (id, position, pace, shooting, dribbling, passing) 
+VALUES (%s, \'%s\', %s, %s, %s, %s)
+""" % (position_table, next_id, position, overall, overall, overall, overall,)
     cursor.execute(insert_pos_table)
     conn.commit()
     print('Inserted Succesfully!')

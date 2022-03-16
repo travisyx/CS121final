@@ -48,7 +48,7 @@ BEGIN
                 (SELECT CAST(1.1*wage AS UNSIGNED) FROM player, 
                     (SELECT MAX(rating) AS rating FROM player) AS t
                 WHERE player.rating = t.rating);
-		END IF;
+        END IF;
     ELSE -- Other players have this rating
         SET predicted = 
             (SELECT AVG(wage) FROM player WHERE rating = rating);
@@ -130,15 +130,14 @@ END !
 DELIMITER ;
 
 
--- Given id, name, and rating, insert a predicted wage (based on 
--- other entries) with a player with a new id of MAX(id)+1
+-- Given id, update the predicted wage (based on other entries)
 DELIMITER !
-CREATE PROCEDURE insert_predicted_wage (id INT, name VARCHAR(100), overall INT)
+CREATE PROCEDURE update_predicted_wage (id INT)
 BEGIN
     DECLARE predicted INT DEFAULT 0;
-    DECLARE new_id INT DEFAULT 0;
+    DECLARE overall INT DEFAULT 0;
 
-    SET new_id = (SELECT MAX(id) + 1 FROM player);
+    SET overall = (SELECT rating FROM player WHERE player.id = id);
 
     -- Other players do not have this rating
     IF overall NOT IN (SELECT rating FROM player WHERE rating = overall)
@@ -150,23 +149,28 @@ BEGIN
                 (SELECT CAST(1.1*wage AS UNSIGNED) FROM player, 
                     (SELECT MAX(rating) AS rating FROM player) AS t
                 WHERE player.rating = t.rating);
-		END IF;
+        END IF;
     ELSE -- Other players have this rating
         SET predicted = 
             (SELECT AVG(wage) FROM player WHERE rating = rating);
     END IF;
+    UPDATE player
+    SET wage = predicted
+    WHERE player.id = id;
+    /*
     INSERT INTO player
     VALUES (new_id, name, overall, predicted);
+    */
 END !
 DELIMITER ;
 
 
--- If a player is inserted into the player table, insert a "copy" with 
--- the predicted wage. This makes it more convenient for managers and clients
--- to see the predicted wage as time progresses based on the stats
+-- If a player is inserted into the goalkeepers table, update the predicted 
+-- wage with the predicted wage. This makes it more convenient for managers and 
+-- clients to see the predicted wage as time progresses based on the stats
 DELIMITER !
-CREATE TRIGGER redo_wage AFTER INSERT ON player FOR EACH ROW
+CREATE TRIGGER redo_wage AFTER INSERT ON goalkeepers FOR EACH ROW
 BEGIN
-    CALL insert_predicted_wage (NEW.id, NEW.name, NEW.rating);  
+    CALL update_predicted_wage (NEW.id);  
 END !
 DELIMITER ;
