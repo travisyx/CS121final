@@ -165,11 +165,11 @@ END !
 DELIMITER ;
 
 
--- If a player is inserted into the goalkeepers table, update the predicted 
+-- If a player is inserted into the midfielders table, update the predicted 
 -- wage with the predicted wage. This makes it more convenient for managers and 
 -- clients to see the predicted wage as time progresses based on the stats
 DELIMITER !
-CREATE TRIGGER redo_wage AFTER INSERT ON goalkeepers FOR EACH ROW
+CREATE TRIGGER redo_wage AFTER INSERT ON midfielders FOR EACH ROW
 BEGIN
     CALL update_predicted_wage (NEW.id);  
 END !
