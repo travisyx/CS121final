@@ -86,6 +86,43 @@ WHERE id = \'%s\';
                             riiyer@caltech.edu!""")
 
 
+def compare_players():
+    """
+    Given two player ids, compare them.
+    """
+    play_one = input("Enter the first player's id: ").strip()
+    play_two = input("Enter the second player's id: ").strip()
+    cursor = conn.cursor()
+    # Remember to pass arguments as a tuple like so to prevent SQL
+    # injection.
+    sql = """
+SELECT compare (%s, %s);
+""" % (play_one, play_two, )
+    try:
+        cursor.execute(sql)
+        # row = cursor.fetchone()
+        rows = cursor.fetchall()
+        if len(rows) == 0:
+            print("Something went wrong...")
+        else:
+            row = int(rows[0][0])
+            if row == 1:
+                print("The first player is predicted to be better!")
+            elif row == 0:
+                print("The two players are predicted to be equivalent!")
+            elif row == -1:
+                print("The second player is predicted to be better!")
+            else:
+                print("The two players play different positions!")
+    except mysql.connector.Error as err:
+        if DEBUG:
+            sys.stderr(err)
+            sys.exit(1)
+        else:
+            sys.stderr("""An error occurred, please email txiang@caltech.edu or 
+                            riiyer@caltech.edu!""")
+
+
 def get_TOTY():
     """
     Select a team of the year given the nationality
@@ -164,6 +201,87 @@ SELECT name FROM
             sys.stderr("""An error occurred, please email txiang@caltech.edu or 
                             riiyer@caltech.edu!""")
     
+
+def insert_player():
+    """
+    Insert a new player into the database
+    """
+    goalkeepers = ['GK']
+    defenders = ['LB', 'LWB', 'LCB', 'CB', 'RCB', 'RB', 'RWB']
+    midfielders = ['CDM', 'LDM', 'RDM', 'CAM', 'RCM', 'LCM', \
+                        'CM', 'LAM','RAM', 'LM', 'RM']
+    forwards = ['CF', 'LF', 'LS', 'RS', 'LW', 'RW', 'RF', 'ST']
+
+    print('Create a new player!\n')
+    player_name = input('Enter a new player: \n').strip()
+    nation = input("Enter the player's nationality: \n").strip()
+    position = input("Enter the player's position: \n").strip()
+    age = input("Enter the player's age: \n").strip()
+    dob = input("Enter the player's date of birth (YYYY-MM-DD): \n").strip()
+    height = input("Enter the player's height in cm: \n").strip()
+    weight = input("Enter player's weight in kg: \n").strip()
+    overall = input("Enter player's overall rating: \n").strip()
+    club = input("Enter player's club: \n").strip()
+    position_dict = {'goalkeepers': goalkeepers, 'defenders': defenders, \
+                        'midfielders': midfielders, 'forwards': forwards}
+
+    #Check if the position is a valid position. Else exit
+    position_table = ''
+    for key in position_dict:
+        if position in position_dict[key]:
+            position_table = key
+    if position_table == '':
+        print('The position you entered is not valid')
+        sys.exit(1)
+
+    cursor = conn.cursor()
+    get_next_id = "SELECT MAX(id)+1 AS next_id FROM player;" # get the next id
+    cursor.execute(get_next_id)
+    next_id = cursor.fetchall()[0][0]
+
+    get_predicted_wage = """
+SELECT get_predicted_wage(%s, \'%s\', %s);
+""" % (next_id, player_name, overall,)
+    cursor.execute(get_predicted_wage)
+    pred_wage = cursor.fetchall()[0][0]
+
+    insert_player_table = """
+INSERT INTO player VALUES (%s, \'%s\', %s, %s);
+""" % (next_id, player_name, pred_wage, overall,)
+    cursor.execute(insert_player_table)
+    conn.commit()
+
+    insert_nontech_table = """
+INSERT INTO nontechnical_attributes(age, dob, height, weight, nation, club) 
+VALUES (%s,\'%s\', %s, %s, \'%s\', \'%s\';
+""" % (age, dob, height, weight, nation, club,)
+    cursor.execute(insert_nontech_table)
+    conn.commit()
+
+    if position_table == 'goalkeepers':
+        insert_pos_table = """
+INSERT INTO \'%s\' (diving, handling, kicking, reflexes, speed, positioning) 
+VALUES (%s, %s, %s, %s, %s, %s)
+""" % (position_table, overall, overall, overall, overall, overall, overall,)
+    elif position_table == 'defenders':
+        insert_pos_table = """
+INSERT INTO \'%s\' (defending, physical) VALUES (%s, %s)
+""" % (position_table, overall, overall,)
+    elif position_table == 'midfielders':
+        insert_pos_table = """
+INSERT INTO \'%s\' (pace, passing, physical, dribbling) 
+VALUES (%s, %s, %s, %s)
+""" % (position_table, overall, overall, overall, overall,)
+    else:
+        insert_pos_table = """
+INSERT INTO \'%s\' (pace, shooting, dribbling, passing) 
+VALUES (%s, %s, %s, %s)
+""" % (position_table, overall, overall, overall, overall,)
+    cursor.execute(insert_pos_table)
+    conn.commit()
+    print('Inserted Succesfully!')
+
+
 # ----------------------------------------------------------------------
 # Functions for Logging Users In
 # ----------------------------------------------------------------------
@@ -220,6 +338,8 @@ def create_user():
         else:
             sys.stderr("""An error occurred, please email txiang@caltech.edu or 
                             riiyer@caltech.edu!""")
+
+
 # ----------------------------------------------------------------------
 # Command-Line Functionality
 # ----------------------------------------------------------------------
@@ -230,10 +350,12 @@ def show_options():
     sending a request to do <x>, etc.
     """
     print('What would you like to do? ')
-    print('  (i) - Get information on a player by id')
-    print('  (n) - Get the TOTY given a nationality')
-    print('  (l) - Login')
     print('  (c) - Create a new account')
+    print('  (l) - Login')
+    print('  (i) - Get information on a player by id')
+    print('  (m) - Compare two players')
+    print('  (n) - Get the TOTY given a nationality')
+    print('  (p) - Enter a password to access admin (for convenience)')
     print('  (q) - quit')
     print()
     ans = input('Enter an option: ').lower()
@@ -241,12 +363,22 @@ def show_options():
         quit_ui()
     elif ans == 'i':
         select_given_id()
+    elif ans == 'm':
+        compare_players()
     elif ans == 'n':
         get_TOTY()
     elif ans == 'l':
         login()
     elif ans == 'c':
         create_user()
+    elif ans == 'p':
+        inp = input("Enter the password: ")
+        if inp.lower().strip() == 'knox':
+            print("Success!")
+            show_admin_options()
+        else:
+            print("Incorrect.")
+            show_options()
     elif ans == '':
         pass    
 
@@ -260,8 +392,11 @@ def show_admin_options():
     modifying <x> based on a given id, removing <x>, etc.
     """
     print('What would you like to do? ')
+    print('  (c) - Create a new account')
+    print('  (l) - Login')
     print('  (i) - Get information on a player by id')
     print('  (n) - Get the TOTY given a nationality')
+    print('  (p) - Insert a player')
     print('  (q) - quit')
     print()
     ans = input('Enter an option: ').lower()
@@ -271,6 +406,12 @@ def show_admin_options():
         select_given_id()
     elif ans == 'n':
         get_TOTY()
+    elif ans == 'l':
+        login()
+    elif ans == 'c':
+        create_user()
+    elif ans == 'p':
+        insert_player()
     elif ans == '':
         pass
 

@@ -9,9 +9,6 @@ https://www.kaggle.com/stefanoleone992/fifa-20-complete-player-dataset?select=pl
 
 where we used players_20.csv. 
 
-TODO: Include instructions for loading your data from the command-line in MySQL
+To load the data from the command line, run MySql from the command line. Then, run "source setup.sql" followed by "load-data.sql". This will load the data into the command line. Then, run "source setup-passwords.sql", "source setup-routines.sql", "grant-permisisons.sql", and "source queries.sql" to get the maximum functionality for the app.
 
-TODO: Include instruction for running your Python program (e.g. if command-line arguments are supported, indicate what those are)
-
-TODO: If there are any unfinished features, indicate this in your README so that we know some incomplete functionality is intended to prevent possible deductions (assuming you follow the rest of the requirements)
-
+To run the Python program, simply run "python3 app.py".

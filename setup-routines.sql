@@ -1,6 +1,5 @@
 -- This function takes as an input the id for a player and guesses the
 -- worth in N years
--- DROP FUNCTION IF EXISTS guess_future_worth;
 DELIMITER !
 CREATE FUNCTION guess_future_worth (id INT, N int) 
     RETURNS DOUBLE DETERMINISTIC
@@ -32,11 +31,37 @@ END !
 DELIMITER ;
 
 
+-- This function predicts the wage given
+DELIMITER !
+CREATE FUNCTION get_predicted_wage (id INT, name VARCHAR(100), overall INT)
+    RETURNS INT DETERMINISTIC 
+BEGIN
+    DECLARE predicted INT DEFAULT 0;
+
+    -- Other players do not have this rating
+    IF overall NOT IN (SELECT rating FROM player WHERE rating = overall)
+    THEN
+        IF overall < (SELECT MIN(rating) FROM player)
+        THEN SET predicted = 0;
+        ELSE
+            SET predicted = 
+                (SELECT CAST(1.1*wage AS UNSIGNED) FROM player, 
+                    (SELECT MAX(rating) AS rating FROM player) AS t
+                WHERE player.rating = t.rating);
+		END IF;
+    ELSE -- Other players have this rating
+        SET predicted = 
+            (SELECT AVG(wage) FROM player WHERE rating = rating);
+    END IF;
+    RETURN predicted;
+END !
+DELIMITER ;
+
+
 -- This function takes as an input a player and computers a projected rating
 -- that is more precise than the FIFA rating. This allows for easier comparison
 -- between two players of the same position. If the player is not found, then
 -- return -1
--- DROP FUNCTION IF EXISTS compute_rating;
 DELIMITER !
 CREATE FUNCTION compute_rating (play_id INT) 
     RETURNS DOUBLE DETERMINISTIC
@@ -107,7 +132,6 @@ DELIMITER ;
 
 -- Given id, name, and rating, insert a predicted wage (based on 
 -- other entries) with a player with a new id of MAX(id)+1
--- DROP PROCEDURE IF EXISTS insert_predicted_wage;
 DELIMITER !
 CREATE PROCEDURE insert_predicted_wage (id INT, name VARCHAR(100), overall INT)
 BEGIN
@@ -131,12 +155,11 @@ BEGIN
         SET predicted = 
             (SELECT AVG(wage) FROM player WHERE rating = rating);
     END IF;
-    INSERT INTO players
+    INSERT INTO player
     VALUES (new_id, name, overall, predicted);
 END !
 DELIMITER ;
 
--- DROP TRIGGER IF EXISTS redo_wage;
 
 -- If a player is inserted into the player table, insert a "copy" with 
 -- the predicted wage. This makes it more convenient for managers and clients
