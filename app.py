@@ -97,24 +97,64 @@ def get_TOTY():
         if j != len(inp)-1:
             nation += " "
     cursor = conn.cursor()
-    sql = """
-SELECT name FROM player NATURAL JOIN nontechnical_attributes
-WHERE nationality = \'%s\';
+    sqlgk = """
+SELECT name FROM 
+    (SELECT name, id, compute_rating(id) AS rating
+        FROM goalkeepers NATURAL JOIN nontechnical_attributes
+        WHERE nationality = \'%s\' ORDER BY rating DESC LIMIT 1) AS t;
+""" % (nation, )
+    sqldef = """
+SELECT name FROM 
+    (SELECT name, id, compute_rating(id) AS rating
+        FROM defenders NATURAL JOIN nontechnical_attributes
+        WHERE nationality = \'%s\' ORDER BY rating DESC LIMIT 4) AS t;
+""" % (nation, )
+    sqlmid = """
+SELECT name FROM 
+    (SELECT name, id, compute_rating(id) AS rating
+        FROM midfielders NATURAL JOIN nontechnical_attributes
+        WHERE nationality = \'%s\' ORDER BY rating DESC LIMIT 3) AS t;
+""" % (nation, )
+    sqlfor = """
+SELECT name FROM 
+    (SELECT name, id, compute_rating(id) AS rating
+        FROM forwards NATURAL JOIN nontechnical_attributes
+        WHERE nationality = \'%s\' ORDER BY rating DESC LIMIT 3) AS t;
 """ % (nation, )
     try:
-        cursor.execute(sql)
-        # row = cursor.fetchone()
-        rows = cursor.fetchall()
-        if len(rows) == 0:
+        # Select the goalkeeper
+        cursor.execute(sqlgk)
+        rowsgk = cursor.fetchall()
+
+        # Select the 4 defenders
+        cursor.execute(sqldef)
+        rowsdef = cursor.fetchall()
+
+        # Select the 3 midfielders
+        cursor.execute(sqlmid)
+        rowsmid = cursor.fetchall()
+
+        # Select the 3 forwards
+        cursor.execute(sqlfor)
+        rowsfor = cursor.fetchall()
+
+        num_players = len(rowsgk) + len(rowsdef) + len(rowsmid) + len(rowsfor)
+        if num_players == 0:
             print(f"No player from the nation {nation} exists in the db!")
-        elif len(rows) < 11:
+        elif num_players < 11:
             print("""There are not enough players from this 
-                        nation to form a TOTY!""")
-            print(f"There are only {len(rows)} players!")
+                        #nation to form a TOTY!""")
+            print(f"There are only {num_players} players!")
         else:
-            for row in rows:
-                (tmp) = (row)
-                print("Name: " + str(row[0]))
+            print(f"\nThe TOTY for {nation} is: ")
+            for row in rowsgk:
+                print("Goalkeeper: " + str(row[0]))
+            for row in rowsdef:
+                print("Defender: " + str(row[0]))
+            for row in rowsmid:
+                print("Midfielder: " + str(row[0]))
+            for row in rowsfor:
+                print("Forward: " + str(row[0]))
     except mysql.connector.Error as err:
         if DEBUG:
             sys.stderr(err)
@@ -140,6 +180,7 @@ def show_options():
     print('What would you like to do? ')
     print('  (i) - Get information on a player by id')
     print('  (n) - Get the TOTY given a nationality')
+    print('  (l) - Login')
     print('  (q) - quit')
     print()
     ans = input('Enter an option: ').lower()
@@ -149,6 +190,8 @@ def show_options():
         select_given_id()
     elif ans == 'n':
         get_TOTY()
+    elif ans == 'l':
+        login()
     elif ans == '':
         pass    
 
