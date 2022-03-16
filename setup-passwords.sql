@@ -66,6 +66,7 @@ END !
 DELIMITER ;
 
 DROP FUNCTION IF EXISTS authenticate;
+
 -- [Problem 1b]
 -- Authenticates the specified username and password against the data
 -- in the user_info table.  Returns 1 if the user appears in the table, and the

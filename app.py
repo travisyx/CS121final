@@ -212,6 +212,7 @@ def create_user():
         cursor.execute(sql)
         rows = cursor.fetchall()
         print("Success!")
+        show_options()
     except mysql.connector.Error as err:
         if DEBUG:
             sys.stderr(err)
@@ -261,8 +262,6 @@ def show_admin_options():
     print('What would you like to do? ')
     print('  (i) - Get information on a player by id')
     print('  (n) - Get the TOTY given a nationality')
-    print('  (x) - yet another nifty thing')
-    print('  (x) - more nifty things!')
     print('  (q) - quit')
     print()
     ans = input('Enter an option: ').lower()
